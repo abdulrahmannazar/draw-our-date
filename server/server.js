@@ -82,7 +82,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  // NEW: Sync the game mode when the host changes it
   socket.on('update_mode', ({ mode }) => {
     const room = rooms.get(socket.roomCode);
     if (room) {
@@ -138,9 +137,10 @@ io.on('connection', (socket) => {
 
         const roundRecord = {
           round: room.round,
+          mode: room.mode,
           prompt: room.currentPrompt,
-          player1: { name: p1.nickname, avatar: p1.avatar, drawing: p1.drawing },
-          player2: { name: p2.nickname, avatar: p2.avatar, drawing: p2.drawing },
+          player1: { name: p1.nickname, avatar: p1.avatar, drawing: p1.drawing, id: p1.id },
+          player2: { name: p2.nickname, avatar: p2.avatar, drawing: p2.drawing, id: p2.id },
           similarity: score,
           verdict,
           reactions: []

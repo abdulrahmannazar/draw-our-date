@@ -23,8 +23,8 @@ export default function Game({ room, socket }) {
   let displayPrompt = `🎨 "${room.currentPrompt}"`;
   if (room.mode === 'Draw Together') {
     displayPrompt = isPlayer1
-      ? `🎨 Draw the LEFT half of: "${room.currentPrompt}"`
-      : `🎨 Draw the RIGHT half of: "${room.currentPrompt}"`;
+      ? `🎨 You draw the BACKGROUND / SCENERY for: "${room.currentPrompt}"`
+      : `🎨 You draw the CHARACTERS / MAIN FOCUS for: "${room.currentPrompt}"`;
   } else if (room.mode === 'Draw & Guess') {
     displayPrompt = isPlayer1
       ? `🤫 Secretly Draw: "${room.currentPrompt}"`
@@ -133,24 +133,43 @@ export default function Game({ room, socket }) {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div className="glass-card" style={{ textAlign: 'center', padding: '2rem' }}>
-            <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Round Chemistry Score</div>
-            <div style={{ fontSize: '4.2rem', fontWeight: 900, background: 'linear-gradient(135deg, #ff527b, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1 }}>{revealedData.score}%</div>
-            <h3 style={{ fontSize: '1.4rem', color: '#1e293b', marginTop: '0.5rem' }}>{revealedData.verdict.title}</h3>
-            <p style={{ color: '#64748b', fontWeight: 600 }}>{revealedData.verdict.subtitle}</p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-            <div className="glass-card" style={{ padding: '1.25rem', textAlign: 'center' }}>
-              <div style={{ fontWeight: 800, color: '#e11d48', marginBottom: '0.8rem' }}>Your Art ❤️ ({myPlayer?.nickname})</div>
-              <img src={revealedData.drawings[socket.id]} alt="My drawing" style={{ width: '100%', aspectRatio: '1/1', borderRadius: '18px', border: '2px solid #fecdd3', objectFit: 'contain', background: '#fff' }} />
+          
+          {/* Conditional Rendering for Reveal Header & Canvas based on Mode */}
+          {room.mode === 'Draw Together' ? (
+            <div className="glass-card" style={{ textAlign: 'center', padding: '2rem' }}>
+              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Collaboration Score</div>
+              <div style={{ fontSize: '4.2rem', fontWeight: 900, background: 'linear-gradient(135deg, #ff527b, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1 }}>{revealedData.score}%</div>
+              <h3 style={{ fontSize: '1.4rem', color: '#1e293b', marginTop: '0.5rem' }}>Your Combined Masterpiece! 🎨✨</h3>
+              
+              {/* MERGED CANVAS DISPLAY */}
+              <div style={{ position: 'relative', width: '100%', maxWidth: '420px', margin: '2rem auto 1.5rem auto', aspectRatio: '1/1', borderRadius: '18px', border: '3px solid #8b5cf6', background: '#fff', overflow: 'hidden', boxShadow: '0 8px 24px rgba(139, 92, 246, 0.25)' }}>
+                <img src={revealedData.drawings[room.players[0].id]} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', mixBlendMode: 'multiply' }} />
+                <img src={revealedData.drawings[room.players[1].id]} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', mixBlendMode: 'multiply' }} />
+              </div>
             </div>
-            <div className="glass-card" style={{ padding: '1.25rem', textAlign: 'center' }}>
-              <div style={{ fontWeight: 800, color: '#2563eb', marginBottom: '0.8rem' }}>{partner?.nickname}&apos;s Art 🔵</div>
-              <img src={revealedData.drawings[partner?.id]} alt="Partner drawing" style={{ width: '100%', aspectRatio: '1/1', borderRadius: '18px', border: '2px solid #bfdbfe', objectFit: 'contain', background: '#fff' }} />
-            </div>
-          </div>
+          ) : (
+            <>
+              <div className="glass-card" style={{ textAlign: 'center', padding: '2rem' }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Round Chemistry Score</div>
+                <div style={{ fontSize: '4.2rem', fontWeight: 900, background: 'linear-gradient(135deg, #ff527b, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1 }}>{revealedData.score}%</div>
+                <h3 style={{ fontSize: '1.4rem', color: '#1e293b', marginTop: '0.5rem' }}>{revealedData.verdict.title}</h3>
+                <p style={{ color: '#64748b', fontWeight: 600 }}>{revealedData.verdict.subtitle}</p>
+              </div>
 
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                <div className="glass-card" style={{ padding: '1.25rem', textAlign: 'center' }}>
+                  <div style={{ fontWeight: 800, color: '#e11d48', marginBottom: '0.8rem' }}>Your Art ❤️ ({myPlayer?.nickname})</div>
+                  <img src={revealedData.drawings[socket.id]} alt="My drawing" style={{ width: '100%', aspectRatio: '1/1', borderRadius: '18px', border: '2px solid #fecdd3', objectFit: 'contain', background: '#fff' }} />
+                </div>
+                <div className="glass-card" style={{ padding: '1.25rem', textAlign: 'center' }}>
+                  <div style={{ fontWeight: 800, color: '#2563eb', marginBottom: '0.8rem' }}>{partner?.nickname}&apos;s Art 🔵</div>
+                  <img src={revealedData.drawings[partner?.id]} alt="Partner drawing" style={{ width: '100%', aspectRatio: '1/1', borderRadius: '18px', border: '2px solid #bfdbfe', objectFit: 'contain', background: '#fff' }} />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Reactions */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
             <ReactionBar onSendReaction={handleSendReaction} partnerName={partner?.nickname || 'Partner'} />
             <div className="glass-card-sm" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -170,18 +189,17 @@ export default function Game({ room, socket }) {
             </div>
           </div>
 
-          {isPlayer1 && (
+          {isPlayer1 ? (
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
               <button className="btn-primary" onClick={handleNextRound} style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }}>
                 <span>{room.round >= room.maxRounds ? 'View Final Results 🏆' : 'Next Romantic Round 💕'}</span>
                 <ArrowRight size={20} />
               </button>
             </div>
-          )}
-          {!isPlayer1 && (
-             <div style={{ textAlign: 'center', color: '#64748b', fontWeight: 700, marginTop: '1.5rem' }}>
-               Waiting for host to start next round...
-             </div>
+          ) : (
+            <div style={{ textAlign: 'center', color: '#64748b', fontWeight: 700, marginTop: '1.5rem' }}>
+              Waiting for host to start next round...
+            </div>
           )}
         </div>
       )}
