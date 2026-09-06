@@ -3,8 +3,8 @@ import { Clock } from 'lucide-react';
 
 export default function Timer({ seconds }) {
   const isUrgent = seconds <= 10;
-  const minutes = Math.floor(seconds / 300);
-  const remainingSecs = seconds % 300;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSecs = seconds % 60;
   const formattedTime = `${String(minutes).padStart(2, '0')}:${String(remainingSecs).padStart(2, '0')}`;
 
   return (

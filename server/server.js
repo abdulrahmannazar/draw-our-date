@@ -48,7 +48,7 @@ io.on('connection', (socket) => {
       round: 1,
       maxRounds: 5,
       gameState: 'lobby',
-      timer: 60,
+      timer: 300,
       timerInterval: null,
       currentPrompt: null,
       history: []
@@ -96,7 +96,7 @@ io.on('connection', (socket) => {
 
     room.gameState = 'drawing';
     room.currentPrompt = prompt;
-    room.timer = 60;
+    room.timer = 300;
     room.players.forEach(p => { p.drawing = null; p.submitted = false; });
 
     if (room.timerInterval) clearInterval(room.timerInterval);
@@ -182,7 +182,7 @@ io.on('connection', (socket) => {
       room.round += 1;
       room.gameState = 'drawing';
       room.currentPrompt = prompt;
-      room.timer = 60;
+      room.timer = 300;
       room.players.forEach(p => { p.drawing = null; p.submitted = false; });
 
       if (room.timerInterval) clearInterval(room.timerInterval);
