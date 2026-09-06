@@ -4,7 +4,7 @@ import Timer from '../components/Timer';
 import ReactionBar from '../components/ReactionBar';
 import Confetti from '../components/Confetti';
 import { getRandomPrompt } from '../data/prompts';
-import { Heart, Sparkles, CheckCircle, ArrowRight, Eye, MessageCircle } from 'lucide-react';
+import { Sparkles, CheckCircle, ArrowRight, MessageCircle } from 'lucide-react';
 
 export default function Game({ room, socket }) {
   const canvasRef = useRef(null);
@@ -17,6 +17,19 @@ export default function Game({ room, socket }) {
 
   const myPlayer = room.players.find(p => p.id === socket.id);
   const partner = room.players.find(p => p.id !== socket.id);
+  const isPlayer1 = room.players[0]?.id === socket.id;
+
+  // Dynamically change instructions based on the active mode
+  let displayPrompt = `🎨 "${room.currentPrompt}"`;
+  if (room.mode === 'Draw Together') {
+    displayPrompt = isPlayer1
+      ? `🎨 Draw the LEFT half of: "${room.currentPrompt}"`
+      : `🎨 Draw the RIGHT half of: "${room.currentPrompt}"`;
+  } else if (room.mode === 'Draw & Guess') {
+    displayPrompt = isPlayer1
+      ? `🤫 Secretly Draw: "${room.currentPrompt}"`
+      : `🤔 Partner is drawing a secret! Sketch your guess!`;
+  }
 
   useEffect(() => {
     socket.on('timer_tick', (secs) => { setTimerSeconds(secs); });
@@ -50,7 +63,10 @@ export default function Game({ room, socket }) {
   };
 
   const handleNextRound = () => {
-    const nextPrompt = getRandomPrompt();
+    let category = null;
+    if (room.mode === 'Guess Me') category = 'Guess Me 🧠';
+    
+    const nextPrompt = getRandomPrompt(category);
     socket.emit('next_round', { prompt: nextPrompt });
   };
 
@@ -65,9 +81,9 @@ export default function Game({ room, socket }) {
       <div className="glass-card" style={{ padding: '1.25rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#ff527b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            ROUND {room.round} / {room.maxRounds}
+            ROUND {room.round} / {room.maxRounds} • {room.mode}
           </div>
-          <h2 style={{ fontSize: '1.35rem', color: '#1e293b', marginTop: '0.2rem' }}>🎨 &ldquo;{room.currentPrompt}&rdquo;</h2>
+          <h2 style={{ fontSize: '1.25rem', color: '#1e293b', marginTop: '0.2rem' }}>{displayPrompt}</h2>
         </div>
         {!revealedData && <Timer seconds={timerSeconds} />}
       </div>
@@ -154,12 +170,19 @@ export default function Game({ room, socket }) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-            <button className="btn-primary" onClick={handleNextRound} style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }}>
-              <span>{room.round >= room.maxRounds ? 'View Final Results 🏆' : 'Next Romantic Round 💕'}</span>
-              <ArrowRight size={20} />
-            </button>
-          </div>
+          {isPlayer1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+              <button className="btn-primary" onClick={handleNextRound} style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }}>
+                <span>{room.round >= room.maxRounds ? 'View Final Results 🏆' : 'Next Romantic Round 💕'}</span>
+                <ArrowRight size={20} />
+              </button>
+            </div>
+          )}
+          {!isPlayer1 && (
+             <div style={{ textAlign: 'center', color: '#64748b', fontWeight: 700, marginTop: '1.5rem' }}>
+               Waiting for host to start next round...
+             </div>
+          )}
         </div>
       )}
     </div>

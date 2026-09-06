@@ -5,7 +5,6 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// ES Module setup for __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -23,7 +22,6 @@ const io = new Server(httpServer, {
 const rooms = new Map();
 
 function generateSimilarity(drawingA, drawingB) {
-  // Playful similarity heuristic based on drawing data density + couple affinity variation
   const lenA = drawingA ? drawingA.length : 1000;
   const lenB = drawingB ? drawingB.length : 1000;
   const ratio = Math.min(lenA, lenB) / Math.max(lenA, lenB);
@@ -65,12 +63,8 @@ io.on('connection', (socket) => {
     const formattedCode = code?.trim().toUpperCase();
     const room = rooms.get(formattedCode);
 
-    if (!room) {
-      return socket.emit('error_message', 'Room not found! Double check the code 💕');
-    }
-    if (room.players.length >= 2) {
-      return socket.emit('error_message', 'Room is already full of love (2/2 players)!');
-    }
+    if (!room) return socket.emit('error_message', 'Room not found! Double check the code 💕');
+    if (room.players.length >= 2) return socket.emit('error_message', 'Room is already full of love (2/2 players)!');
 
     room.players.push({ id: socket.id, nickname, avatar, ready: false, drawing: null });
     socket.join(formattedCode);
@@ -81,10 +75,18 @@ io.on('connection', (socket) => {
   socket.on('toggle_ready', () => {
     const room = rooms.get(socket.roomCode);
     if (!room) return;
-
     const player = room.players.find(p => p.id === socket.id);
     if (player) {
       player.ready = !player.ready;
+      io.to(room.code).emit('room_updated', room);
+    }
+  });
+
+  // NEW: Sync the game mode when the host changes it
+  socket.on('update_mode', ({ mode }) => {
+    const room = rooms.get(socket.roomCode);
+    if (room) {
+      room.mode = mode;
       io.to(room.code).emit('room_updated', room);
     }
   });
@@ -99,13 +101,11 @@ io.on('connection', (socket) => {
     room.players.forEach(p => { p.drawing = null; p.submitted = false; });
 
     if (room.timerInterval) clearInterval(room.timerInterval);
-
     io.to(room.code).emit('game_started', room);
 
     room.timerInterval = setInterval(() => {
       room.timer -= 1;
       io.to(room.code).emit('timer_tick', room.timer);
-
       if (room.timer <= 0) {
         clearInterval(room.timerInterval);
         io.to(room.code).emit('times_up');
@@ -128,7 +128,6 @@ io.on('connection', (socket) => {
     const allSubmitted = room.players.every(p => p.submitted);
     if (allSubmitted) {
       if (room.timerInterval) clearInterval(room.timerInterval);
-      
       io.to(room.code).emit('start_reveal_countdown');
       
       setTimeout(() => {
@@ -225,15 +224,12 @@ io.on('connection', (socket) => {
   });
 });
 
-// Serve the built React frontend
 app.use(express.static(path.join(__dirname, '../dist')));
 
-// Catch-all route to hand off routing to React
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist', 'index.html'));
 });
 
-// Use the cloud provider's dynamic port, or 3001 locally
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
   console.log(`Draw Our Date Server running on port ${PORT}`);

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Copy, Check, Play, UserCheck, Clock, Sparkles } from 'lucide-react';
+import { Copy, Check, Play, UserCheck, Clock } from 'lucide-react';
+import { getRandomPrompt } from '../data/prompts';
 
 const MODES = [
   { id: 'Same Prompt', icon: '❤️', label: 'Same Prompt', desc: 'Both players draw the exact same romantic prompt.' },
@@ -10,7 +11,7 @@ const MODES = [
 
 export default function Lobby({ room, socket, isHost }) {
   const [copied, setCopied] = useState(false);
-  const [selectedMode, setSelectedMode] = useState(room.mode || 'Same Prompt');
+  const selectedMode = room.mode || 'Same Prompt'; // Read directly from server state
 
   const myPlayer = room.players.find(p => p.id === socket.id);
   const partnerPlayer = room.players.find(p => p.id !== socket.id);
@@ -25,8 +26,20 @@ export default function Lobby({ room, socket, isHost }) {
     socket.emit('toggle_ready');
   };
 
+  const handleModeChange = (modeId) => {
+    if (isHost) {
+      socket.emit('update_mode', { mode: modeId });
+    }
+  };
+
   const handleStartGame = () => {
-    socket.emit('start_game', { prompt: "Draw your idea of our perfect dreamy date." });
+    // Generate the first prompt based on the selected mode category
+    let category = null;
+    if (room.mode === 'Guess Me') category = 'Guess Me 🧠';
+    
+    socket.emit('start_game', {
+      prompt: getRandomPrompt(category)
+    });
   };
 
   return (
@@ -81,7 +94,20 @@ export default function Lobby({ room, socket, isHost }) {
         <h3 style={{ fontSize: '1.1rem', marginBottom: '0.8rem', color: '#1e293b' }}>Select Game Mode</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.8rem' }}>
           {MODES.map((m) => (
-            <div key={m.id} onClick={() => setSelectedMode(m.id)} style={{ padding: '0.8rem', borderRadius: '16px', border: selectedMode === m.id ? '2px solid #ff527b' : '1px solid #e2e8f0', background: selectedMode === m.id ? '#fff1f2' : '#ffffff', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s ease' }}>
+            <div 
+              key={m.id} 
+              onClick={() => handleModeChange(m.id)} 
+              style={{ 
+                padding: '0.8rem', 
+                borderRadius: '16px', 
+                border: selectedMode === m.id ? '2px solid #ff527b' : '1px solid #e2e8f0', 
+                background: selectedMode === m.id ? '#fff1f2' : '#ffffff', 
+                cursor: isHost ? 'pointer' : 'default', 
+                textAlign: 'center', 
+                transition: 'all 0.2s ease',
+                opacity: (!isHost && selectedMode !== m.id) ? 0.6 : 1
+              }}
+            >
               <div style={{ fontSize: '1.8rem' }}>{m.icon}</div>
               <div style={{ fontWeight: 700, fontSize: '0.9rem', marginTop: '0.3rem', color: '#1e293b' }}>{m.label}</div>
             </div>
