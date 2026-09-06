@@ -13,7 +13,7 @@ export default function HeartBackground() {
   }, []);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
       {hearts.map((h) => (
         <svg
           key={h.id}
@@ -24,7 +24,8 @@ export default function HeartBackground() {
             height: h.size,
             animationDuration: `${h.duration}s`,
             animationDelay: `${h.delay}s`,
-            fill: h.color
+            fill: h.color,
+            willChange: 'transform' /* Forces GPU hardware acceleration on mobile */
           }}
           viewBox="0 0 24 24"
         >

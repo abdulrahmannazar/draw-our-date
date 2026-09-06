@@ -11,7 +11,7 @@ import { Heart } from 'lucide-react';
 const socket = io();
 
 export default function App() {
-  const [view, setView] = useState('landing');
+  const [view, setView] = useState('landing'); // landing, create, join, lobby, game, results, memories
   const [room, setRoom] = useState(null);
   const [nickname, setNickname] = useState('');
   const [avatar, setAvatar] = useState('❤️');
@@ -87,6 +87,7 @@ export default function App() {
     <div style={{ minHeight: '100vh', padding: '1.5rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <HeartBackground />
 
+      {/* Top Brand Logo */}
       <header
         style={{
           display: 'flex',
@@ -115,6 +116,7 @@ export default function App() {
         <span style={{ fontSize: '1.3rem', fontWeight: 800, color: '#1e293b' }}>Draw Our Date</span>
       </header>
 
+      {/* Error Toast notification */}
       {errorMessage && (
         <div
           style={{
@@ -134,6 +136,7 @@ export default function App() {
         </div>
       )}
 
+      {/* Screen Router */}
       <main style={{ width: '100%', zIndex: 1, flex: 1 }}>
         {view === 'landing' && <Landing onNavigate={(dest) => setView(dest)} />}
 
@@ -165,6 +168,7 @@ export default function App() {
                 />
               </div>
 
+              {/* Avatar Picker */}
               <div style={{ textAlign: 'left' }}>
                 <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Pick an Emoji Avatar</label>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.3rem' }}>
@@ -281,8 +285,9 @@ export default function App() {
           <Lobby room={room} socket={socket} isHost={room.players[0]?.id === socket.id} />
         )}
 
+        {/* Added key={room.round} to force Game component to remount each round */}
         {view === 'game' && room && (
-          <Game room={room} socket={socket} />
+          <Game key={room.round} room={room} socket={socket} />
         )}
 
         {view === 'results' && (
